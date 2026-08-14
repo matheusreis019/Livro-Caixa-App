@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Livro-Caixa</title>
+<style>
+  :root{
+    --desk:#173229;
+    --desk-dark:#102420;
+    --paper:#f6f1e3;
+    --paper-line:#e2d9c2;
+    --ink-debt:#9c2f24;
+    --ink-credit:#1f4a5c;
+    --ink-neutral:#2b2620;
+    --brass:#b8934a;
+    --brass-dim:#8a6d38;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 20% -10%, #1d4536 0%, transparent 60%),
+      linear-gradient(180deg, var(--desk) 0%, var(--desk-dark) 100%);
+    min-height:100vh;
+    font-family: 'Iowan Old Style','Palatino Linotype', Georgia, serif;
+    color: var(--ink-neutral);
+    padding: 28px 16px 48px;
+  }
+  .wrap{
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .letterhead{
+    text-align:center;
+    margin-bottom: 22px;
+  }
+  .letterhead .eyebrow{
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.35em;
+    font-size: 11px;
+    color: var(--brass);
+    text-transform: uppercase;
+  }
+  .letterhead h1{
+    color: #f6f1e3;
+    font-size: 34px;
+    margin: 6px 0 2px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .letterhead p{
+    color: #b8c9bd;
+    font-size: 13px;
+    margin: 0;
+    font-style: italic;
+  }
+
+  .ledger{
+    background: var(--paper);
+    border-radius: 3px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45), 0 2px 0 rgba(255,255,255,0.05) inset;
+    padding: 6px;
+    position: relative;
+  }
+  .ledger::before{
+    content:"";
+    position:absolute; inset: 10px;
+    border: 1px solid rgba(43,38,32,0.15);
+    pointer-events:none;
+  }
+  .columns{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    position:relative;
+  }
+  .columns::after{
+    content:"";
+    position:absolute;
+    top:18px; bottom:18px; left:50%;
+    width:1px;
+    background: repeating-linear-gradient(180deg, var(--paper-line) 0 6px, transparent 6px 11px);
+  }
+  @media (max-width: 620px){
+    .columns{ grid-template-columns: 1fr; }
+    .columns::after{ display:none; }
+  }
+  .col{ padding: 22px 22px 18px; }
+  .col-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom: 2px solid currentColor;
+    padding-bottom: 8px; margin-bottom: 4px;
+  }
+  .col.debts{ color: var(--ink-debt); }
+  .col.credits{ color: var(--ink-credit); }
+  .col-head h2{
+    margin:0; font-size:16px; letter-spacing:0.06em; text-transform:uppercase;
+  }
+  .col-head .tag{
+    font-family:'Courier New',monospace; font-size:11px; opacity:0.7;
+  }
+
+  .rows{ min-height: 40px; margin-top: 6px; }
+  .row{
+    display:flex; align-items:center; gap:8px;
+    padding: 7px 0;
+    border-bottom: 1px dotted var(--paper-line);
+  }
+  .row input[type="text"]{
+    flex:1; min-width:0;
+    border:none; background:transparent;
+    font-family: inherit; font-size: 14px; color: var(--ink-neutral);
+    padding: 2px 0;
+  }
+  .row input[type="text"]::placeholder{ color:#9a917c; font-style:italic; }
+  .row input[type="text"]:focus{ outline:none; border-bottom:1px solid var(--brass); }
+  .row .val{
+    width: 108px; text-align:right;
+    border:none; background:transparent;
+    font-family:'Courier New',monospace; font-size:14px; font-weight:700;
+    color:inherit;
+  }
+  .row .val:focus{ outline:none; }
+  .row .val::placeholder{ color:#c9bfa2; font-weight:400; }
+  .row .rm{
+    border:none; background:transparent; cursor:pointer;
+    color:#a89f88; font-size:15px; line-height:1; padding:2px 4px;
+    font-family: serif;
+  }
+  .row .rm:hover{ color: var(--ink-debt); }
+
+  .add-line{
+    margin-top: 8px;
+    background:none; border: 1px dashed #b7ac8e;
+    color:#6b6250; font-family:'Courier New',monospace; font-size:12px;
+    padding: 7px 10px; width:100%; text-align:left; cursor:pointer;
+    letter-spacing:0.04em;
+    border-radius: 2px;
+  }
+  .add-line:hover{ border-color: var(--brass); color: var(--brass-dim); }
+
+  .subtotal{
+    margin-top: 14px; padding-top: 10px;
+    border-top: 1px solid currentColor;
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'Courier New',monospace; font-size:15px; font-weight:700;
+  }
+  .subtotal span:first-child{
+    font-family: inherit; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; opacity:0.75; font-weight:400;
+  }
+
+  .result-strip{
+    padding: 22px;
+    text-align:center;
+    position:relative;
+  }
+  .stamp{
+    display:inline-block;
+    padding: 12px 28px;
+    border: 3px solid;
+    border-radius: 6px;
+    transform: rotate(-2deg);
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    font-size: 15px;
+    transition: all 0.25s ease;
+  }
+  .stamp.positive{
+    color: #1f5c3a; border-color:#1f5c3a;
+    background: rgba(31,92,58,0.07);
+  }
+  .stamp.negative{
+    color: var(--ink-debt); border-color: var(--ink-debt);
+    background: rgba(156,47,36,0.07);
+  }
+  .stamp.zero{
+    color:#6b6250; border-color:#6b6250;
+    background: rgba(107,98,80,0.06);
+  }
+  .stamp .amount{
+    display:block; font-size: 26px; margin-top: 4px; letter-spacing: 0.02em;
+  }
+
+  .footer-note{
+    text-align:center; color:#7f9384; font-size:11px; margin-top:16px;
+    font-family:'Courier New',monospace; letter-spacing:0.03em;
+  }
+
+  .actions{
+    display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+    margin-top: 18px;
+  }
+  .action-btn{
+    background: rgba(246,241,227,0.08);
+    border: 1px solid rgba(184,147,74,0.5);
+    color: #e8e2cf;
+    font-family:'Courier New',monospace; font-size:12px; letter-spacing:0.03em;
+    padding: 9px 16px; border-radius: 3px; cursor:pointer;
+    transition: all 0.15s ease;
+  }
+  .action-btn:hover{
+    background: rgba(184,147,74,0.18);
+    border-color: var(--brass);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="letterhead">
+    <div class="eyebrow">Livro-Caixa Pessoal</div>
+    <h1>Dívidas &amp; Saldo</h1>
+    <p>lance cada conta na coluna certa e veja o resultado final</p>
+  </div>
+
+  <div class="ledger">
+    <div class="columns">
+      <div class="col debts">
+        <div class="col-head">
+          <h2>Dívidas</h2>
+          <span class="tag">deve</span>
+        </div>
+        <div class="rows" id="debt-rows"></div>
+        <button class="add-line" id="add-debt">+ adicionar dívida</button>
+        <div class="subtotal"><span>Total de dívidas</span><span id="debt-total">R$ 0,00</span></div>
+      </div>
+
+      <div class="col credits">
+        <div class="col-head">
+          <h2>Saldo positivo</h2>
+          <span class="tag">tem</span>
+        </div>
+        <div class="rows" id="credit-rows"></div>
+        <button class="add-line" id="add-credit">+ adicionar entrada</button>
+        <div class="subtotal"><span>Total disponível</span><span id="credit-total">R$ 0,00</span></div>
+      </div>
+    </div>
+
+    <div class="result-strip">
+      <div class="stamp zero" id="stamp">
+        <span id="stamp-label">Preencha os valores</span>
+        <span class="amount" id="stamp-amount">R$ 0,00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="action-btn" id="btn-export">💾 Salvar backup</button>
+    <button class="action-btn" id="btn-import">📂 Abrir backup</button>
+    <button class="action-btn" id="btn-share">📤 Compartilhar resumo</button>
+    <input type="file" id="file-input" accept=".json" style="display:none">
+  </div>
+
+  <div class="footer-note" id="save-note">salvo automaticamente</div>
+  <div class="footer-note" id="save-note">Creditos Matheus Reis</div>
+</div>
+
+<script>
+let state = { debts: [], credits: [] };
+let idCounter = 1;
+
+function newId(){ return 'r' + (idCounter++); }
+
+function parseValue(v){
+  if(!v) return 0;
+  const cleaned = v.toString().replace(/[^\d,.-]/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',', '.');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
+function formatBRL(n){
+  return n.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+}
+
+function render(){
+  renderCol('debts', document.getElementById('debt-rows'));
+  renderCol('credits', document.getElementById('credit-rows'));
+
+  const debtTotal = state.debts.reduce((s,r)=>s+parseValue(r.value),0);
+  const creditTotal = state.credits.reduce((s,r)=>s+parseValue(r.value),0);
+  document.getElementById('debt-total').textContent = formatBRL(debtTotal);
+  document.getElementById('credit-total').textContent = formatBRL(creditTotal);
+
+  const net = creditTotal - debtTotal;
+  const stamp = document.getElementById('stamp');
+  const label = document.getElementById('stamp-label');
+  const amount = document.getElementById('stamp-amount');
+
+  stamp.classList.remove('positive','negative','zero');
+  if(debtTotal === 0 && creditTotal === 0){
+    stamp.classList.add('zero');
+    label.textContent = 'Preencha os valores';
+    amount.textContent = formatBRL(0);
+  } else if(net > 0){
+    stamp.classList.add('positive');
+    label.textContent = 'Vai sobrar';
+    amount.textContent = formatBRL(net);
+  } else if(net < 0){
+    stamp.classList.add('negative');
+    label.textContent = 'Vai faltar';
+    amount.textContent = formatBRL(Math.abs(net));
+  } else {
+    stamp.classList.add('zero');
+    label.textContent = 'Fica no zero a zero';
+    amount.textContent = formatBRL(0);
+  }
+}
+
+function renderCol(key, container){
+  container.innerHTML = '';
+  state[key].forEach(row=>{
+    const div = document.createElement('div');
+    div.className = 'row';
+    div.innerHTML = `
+      <input type="text" placeholder="descrição" value="${row.desc.replace(/"/g,'&quot;')}" data-id="${row.id}" data-field="desc">
+      <input type="text" inputmode="decimal" class="val" placeholder="R$ 0,00" value="${row.value}" data-id="${row.id}" data-field="value">
+      <button class="rm" data-id="${row.id}" title="remover">✕</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function addRow(key){
+  state[key].push({ id: newId(), desc:'', value:'' });
+  render();
+  save();
+}
+
+function removeRow(key, id){
+  state[key] = state[key].filter(r=>r.id!==id);
+  render();
+  save();
+}
+
+document.getElementById('add-debt').addEventListener('click', ()=>addRow('debts'));
+document.getElementById('add-credit').addEventListener('click', ()=>addRow('credits'));
+
+document.addEventListener('input', (e)=>{
+  const id = e.target.getAttribute('data-id');
+  const field = e.target.getAttribute('data-field');
+  if(!id || !field) return;
+  for(const key of ['debts','credits']){
+    const row = state[key].find(r=>r.id===id);
+    if(row){
+      row[field] = e.target.value;
+      if(field==='value'){ render(); positionCaretFix(e.target); }
+      else { updateTotalsOnly(); }
+      save();
+      break;
+    }
+  }
+});
+
+function positionCaretFix(el){
+  // after full re-render, refocus the same field
+  requestAnimationFrame(()=>{
+    const id = el.getAttribute('data-id');
+    const field = el.getAttribute('data-field');
+    const target = document.querySelector(`[data-id="${id}"][data-field="${field}"]`);
+    if(target){ target.focus(); const v = target.value; target.setSelectionRange(v.length, v.length); }
+  });
+}
+
+function updateTotalsOnly(){
+  const debtTotal = state.debts.reduce((s,r)=>s+parseValue(r.value),0);
+  const creditTotal = state.credits.reduce((s,r)=>s+parseValue(r.value),0);
+  document.getElementById('debt-total').textContent = formatBRL(debtTotal);
+  document.getElementById('credit-total').textContent = formatBRL(creditTotal);
+  const net = creditTotal - debtTotal;
+  const stamp = document.getElementById('stamp');
+  const label = document.getElementById('stamp-label');
+  const amount = document.getElementById('stamp-amount');
+  stamp.classList.remove('positive','negative','zero');
+  if(debtTotal===0 && creditTotal===0){
+    stamp.classList.add('zero'); label.textContent='Preencha os valores'; amount.textContent=formatBRL(0);
+  } else if(net>0){
+    stamp.classList.add('positive'); label.textContent='Vai sobrar'; amount.textContent=formatBRL(net);
+  } else if(net<0){
+    stamp.classList.add('negative'); label.textContent='Vai faltar'; amount.textContent=formatBRL(Math.abs(net));
+  } else {
+    stamp.classList.add('zero'); label.textContent='Fica no zero a zero'; amount.textContent=formatBRL(0);
+  }
+}
+
+document.addEventListener('click', (e)=>{
+  if(e.target.classList.contains('rm')){
+    const id = e.target.getAttribute('data-id');
+    for(const key of ['debts','credits']){
+      if(state[key].find(r=>r.id===id)){ removeRow(key, id); break; }
+    }
+  }
+});
+
+function save(){
+  try{
+    localStorage.setItem('livro-caixa-state', JSON.stringify(state));
+    const note = document.getElementById('save-note');
+    note.textContent = 'salvo';
+    setTimeout(()=>{ note.textContent = 'salvo automaticamente'; }, 1200);
+  }catch(err){ console.error('erro ao salvar', err); }
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem('livro-caixa-state');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed.debts && parsed.credits){
+        state = parsed;
+        const maxId = Math.max(0, ...[...state.debts,...state.credits].map(r=>parseInt((r.id||'r0').slice(1))||0));
+        idCounter = maxId+1;
+      }
+    }
+  }catch(err){ /* sem dados salvos ainda */ }
+  if(state.debts.length===0) state.debts.push({id:newId(),desc:'',value:''});
+  if(state.credits.length===0) state.credits.push({id:newId(),desc:'',value:''});
+  render();
+}
+
+function downloadFile(filename, content, type){
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportBackup(){
+  const dateStr = new Date().toISOString().slice(0,10);
+  downloadFile(`livro-caixa-${dateStr}.json`, JSON.stringify(state, null, 2), 'application/json');
+}
+
+function importBackup(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const parsed = JSON.parse(evt.target.result);
+      if(parsed.debts && parsed.credits){
+        state = parsed;
+        const maxId = Math.max(0, ...[...state.debts,...state.credits].map(r=>parseInt((r.id||'r0').slice(1))||0));
+        idCounter = maxId+1;
+        render();
+        save();
+      } else {
+        alert('Arquivo inválido — não parece ser um backup do Livro-Caixa.');
+      }
+    }catch(err){
+      alert('Não foi possível ler esse arquivo.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function exportSummary(){
+  const debtTotal = state.debts.reduce((s,r)=>s+parseValue(r.value),0);
+  const creditTotal = state.credits.reduce((s,r)=>s+parseValue(r.value),0);
+  const net = creditTotal - debtTotal;
+  const lines = [];
+  lines.push('LIVRO-CAIXA — ' + new Date().toLocaleDateString('pt-BR'));
+  lines.push('');
+  lines.push('DÍVIDAS:');
+  state.debts.forEach(r=>{
+    if(r.desc || parseValue(r.value)) lines.push(`- ${r.desc || '(sem descrição)'}: ${formatBRL(parseValue(r.value))}`);
+  });
+  lines.push(`Total de dívidas: ${formatBRL(debtTotal)}`);
+  lines.push('');
+  lines.push('SALDO POSITIVO:');
+  state.credits.forEach(r=>{
+    if(r.desc || parseValue(r.value)) lines.push(`- ${r.desc || '(sem descrição)'}: ${formatBRL(parseValue(r.value))}`);
+  });
+  lines.push(`Total disponível: ${formatBRL(creditTotal)}`);
+  lines.push('');
+  lines.push(net >= 0 ? `RESULTADO: vai sobrar ${formatBRL(net)}` : `RESULTADO: vai faltar ${formatBRL(Math.abs(net))}`);
+  const dateStr = new Date().toISOString().slice(0,10);
+  downloadFile(`resumo-livro-caixa-${dateStr}.txt`, lines.join('\n'), 'text/plain');
+}
+
+document.getElementById('btn-export').addEventListener('click', exportBackup);
+document.getElementById('btn-import').addEventListener('click', ()=>document.getElementById('file-input').click());
+document.getElementById('file-input').addEventListener('change', importBackup);
+document.getElementById('btn-share').addEventListener('click', exportSummary);
+
+load();
+</script>
+</body>
+</html>
